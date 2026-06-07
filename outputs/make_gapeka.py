@@ -31,10 +31,10 @@ YMIN, YMAX = 0, 165
 
 # Petak jalan (arah bermuatan hulu->hilir): km_atas, km_bawah, jarak, Vmax, Vops, gradien_permil
 SEGMENTS = [
-    (165, 132, 33, 66, 60, 6.0),
-    (132,  99, 33, 66, 60, 4.0),
-    ( 99,  66, 33, 66, 60, 5.0),
-    ( 66,   0, 66, 66, 60, 3.0),
+    (165, 132, 33, 70, 60, 6.0),
+    (132,  99, 33, 70, 60, 4.0),
+    ( 99,  66, 33, 70, 60, 5.0),
+    ( 66,   0, 66, 70, 60, 3.0),
 ]
 VOPS = 55.0
 def seg_minutes(d): return d / VOPS * 60.0
@@ -116,7 +116,7 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
         ax.set_xticks([]); ax.set_yticks([])
         for sp in ax.spines.values(): sp.set_color("#ccc")
 
-    profile(ax_vmax, [s[3] for s in SEGMENTS], 70, "#9c1006", "#f4c9c2", "km/jam", "V-MAX")
+    profile(ax_vmax, [s[3] for s in SEGMENTS], 80, "#9c1006", "#f4c9c2", "km/jam", "V-MAX")
     profile(ax_vops, [s[4] for s in SEGMENTS], 70, "#0a5c2c", "#bfe6cd", "km/jam", "V-OPS")
     profile(ax_grad, [s[5] for s in SEGMENTS], 8, "#7a4b00", "#f3dfb0", "permil (‰)",
             "GRADIEN", fmt="{:.0f}‰")
@@ -189,23 +189,10 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
                              color="#7a0a13", zorder=7,
                              bbox=dict(boxstyle="round,pad=0.18", fc="#fff3f3", ec="#c1121f", lw=0.6))
 
-    # window perawatan = area yang BENAR-BENAR tanpa kereta, yaitu celah menyerong antara
-    # KA terakhir siklus sebelumnya (yang dibungkus dari 24:00) dan KA pertama pukul 06:00.
-    TT = sum(seg_minutes(s[2]) for s in SEGMENTS)   # 180 menit/arah
-    slope = TT / 165.0
-    LD = OP_START + (freq - 1) * headway             # keberangkatan terakhir (24:00)
-    def loaded_left(km):  return (LD - DAY) + (165 - km) * slope
-    def loaded_right(km): return OP_START + (165 - km) * slope
-    def empty_left(km):   return (LD + headway / 2 - DAY) + km * slope
-    def empty_right(km):  return (OP_START + headway / 2) + km * slope
-    kms = [k for k in range(0, 166, 2)]
-    Lb = [max(loaded_left(k), empty_left(k)) for k in kms]
-    Rb = [min(loaded_right(k), empty_right(k)) for k in kms]
-    ax_main.fill_betweenx(kms, Lb, Rb, color="#e6e6e6", lw=0, zorder=0)
-    # arsiran jendela perawatan 00:00-06:00 (window time per dokumen)
+    # arsiran jendela perawatan = band tetap 00:00-06:00 (window time per dokumen)
     ax_main.axvspan(T_START, OP_START, color="#e6e6e6", lw=0, zorder=0)
-    # label di tengah area perawatan
-    cx = (max(loaded_left(82), empty_left(82)) + min(loaded_right(82), empty_right(82))) / 2
+    # label di tengah band perawatan
+    cx = OP_START / 2
     ax_main.text(cx, 82, "jendela perawatan\n(window time)\n00:00–06:00",
                  ha="center", va="center", fontsize=11, color="#777", style="italic", zorder=8,
                  bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#bbb", alpha=0.85))
