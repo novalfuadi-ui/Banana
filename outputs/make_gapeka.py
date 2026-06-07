@@ -68,14 +68,14 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9})
     fig = plt.figure(figsize=figsize, dpi=dpi)
     gs = GridSpec(1, 5, figure=fig,
-                  width_ratios=[2.4, 0.7, 0.95, 0.95, 1.05],
-                  wspace=0.06, left=0.004, right=0.30, top=0.90, bottom=0.07)
+                  width_ratios=[1.9, 0.6, 0.85, 0.85, 0.95],
+                  wspace=0.06, left=0.004, right=0.215, top=0.90, bottom=0.07)
     ax_name = fig.add_subplot(gs[0, 0])
     ax_km   = fig.add_subplot(gs[0, 1], sharey=ax_name)
     ax_vmax = fig.add_subplot(gs[0, 2], sharey=ax_name)
     ax_vops = fig.add_subplot(gs[0, 3], sharey=ax_name)
     ax_grad = fig.add_subplot(gs[0, 4], sharey=ax_name)
-    ax_main = fig.add_axes([0.315, 0.07, 0.675, 0.83], sharey=ax_name)
+    ax_main = fig.add_axes([0.235, 0.07, 0.755, 0.83], sharey=ax_name)
 
     for ax in (ax_name, ax_km, ax_vmax, ax_vops, ax_grad, ax_main):
         ax.set_ylim(YMIN - 4, YMAX + 4)
@@ -140,14 +140,29 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
 
     lw_l, lw_e = (1.2, 1.0) if annotate_all else (1.7, 1.3)
     lab_fs = 7.5 if annotate_all else 7.6
+    DAY = 24 * 60  # batas 24:00; perjalanan yang melewatinya dibungkus (wrap) ke 00:00
 
-    def node_labels(pts, color, dy):
-        for (t, km) in pts:
-            ax_main.plot(t, km, "o", ms=3.2, color=color, mec="white", mew=0.5, zorder=6)
-            ax_main.annotate(hhmm(t), (t, km), textcoords="offset points",
-                             xytext=(0, dy), ha="center",
-                             fontsize=lab_fs, color=color, zorder=7, fontweight="bold",
-                             rotation=0, clip_on=True)
+    def draw_path(pts, color, lw, ls, lab_color=None, dy=0, zorder=4):
+        kw = dict(color=color, lw=lw, ls=ls, zorder=zorder)
+        if ls == "-":
+            kw["solid_capstyle"] = "round"
+        # gambar tiap petak; bagi di batas 24:00 lalu lanjutkan di sisi kiri (t-DAY)
+        for (t0, k0), (t1, k1) in zip(pts, pts[1:]):
+            if t1 <= DAY:
+                ax_main.plot([t0, t1], [k0, k1], **kw)
+            elif t0 >= DAY:
+                ax_main.plot([t0 - DAY, t1 - DAY], [k0, k1], **kw)
+            else:
+                f = (DAY - t0) / (t1 - t0); kb = k0 + f * (k1 - k0)
+                ax_main.plot([t0, DAY], [k0, kb], **kw)
+                ax_main.plot([0, t1 - DAY], [kb, k1], **kw)
+        if lab_color is not None:
+            for (t, km) in pts:
+                x = t if t <= DAY else t - DAY
+                ax_main.plot(x, km, "o", ms=3.2, color=lab_color, mec="white", mew=0.5, zorder=6)
+                ax_main.annotate(hhmm(t % DAY), (x, km), textcoords="offset points",
+                                 xytext=(0, dy), ha="center", fontsize=lab_fs,
+                                 color=lab_color, zorder=7, fontweight="bold", clip_on=True)
 
     # Sesi operasi 06:00-24:00 (mulai pukul 06:00 per dokumen); 00:00-06:00 = window perawatan
     OP_START = 6 * 60
@@ -155,17 +170,13 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     # KA bermuatan (Tabang -> MK), berangkat tiap headway sejumlah frekuensi
     for i in range(freq):
         pts = path_loaded(OP_START + i * headway)
-        ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
-                     color="#c1121f", lw=lw_l, solid_capstyle="round", zorder=4)
-        if annotate_all:
-            node_labels(pts, "#9c1006", dy=6)
+        draw_path(pts, "#c1121f", lw_l, "-",
+                  lab_color=("#9c1006" if annotate_all else None), dy=6, zorder=4)
     # KA kosong (MK -> Tabang)
     for i in range(freq):
         pts = path_empty(OP_START + i * headway + headway / 2)
-        ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
-                     color="#1d4e89", lw=lw_e, ls=(0, (6, 4)), zorder=3)
-        if annotate_all:
-            node_labels(pts, "#123a66", dy=-13)
+        draw_path(pts, "#1d4e89", lw_e, (0, (6, 4)),
+                  lab_color=("#123a66" if annotate_all else None), dy=-13, zorder=3)
 
     if not annotate_all:
         # KA referensi (Tabang dep 06:00) + anotasi waktu tiap stasiun
@@ -178,10 +189,11 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
                              color="#7a0a13", zorder=7,
                              bbox=dict(boxstyle="round,pad=0.18", fc="#fff3f3", ec="#c1121f", lw=0.6))
 
-    # window perawatan (stop operasi total) = 00:00 - 06:00
+    # window perawatan = 00:00 - 06:00 (tanpa keberangkatan baru; hanya sisa perjalanan yg masuk dari 24:00)
     ax_main.axvspan(T_START, OP_START, color="#ececec", zorder=0)
-    ax_main.text(OP_START / 2, 82, "window time\nperawatan\n(00:00–06:00)\nstop operasi",
-                 ha="center", va="center", fontsize=12, color="#888", style="italic")
+    ax_main.text(OP_START / 2, 150, "window perawatan\n00:00–06:00\n(tanpa keberangkatan baru)",
+                 ha="center", va="center", fontsize=11, color="#777", style="italic", zorder=8,
+                 bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#bbb", alpha=0.85))
 
     leg = [mpatches.Patch(color="#c1121f", label="KA Bermuatan (Tabang → Marang Kayu)"),
            mpatches.Patch(color="#1d4e89", label="KA Kosong (Marang Kayu → Tabang)")]
