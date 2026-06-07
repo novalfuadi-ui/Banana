@@ -149,16 +149,19 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
                              fontsize=lab_fs, color=color, zorder=7, fontweight="bold",
                              rotation=0, clip_on=True)
 
+    # Sesi operasi 06:00-24:00 (mulai pukul 06:00 per dokumen); 00:00-06:00 = window perawatan
+    OP_START = 6 * 60
+
     # KA bermuatan (Tabang -> MK), berangkat tiap headway sejumlah frekuensi
     for i in range(freq):
-        pts = path_loaded(i * headway)
+        pts = path_loaded(OP_START + i * headway)
         ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
                      color="#c1121f", lw=lw_l, solid_capstyle="round", zorder=4)
         if annotate_all:
             node_labels(pts, "#9c1006", dy=6)
     # KA kosong (MK -> Tabang)
     for i in range(freq):
-        pts = path_empty(i * headway + headway / 2)
+        pts = path_empty(OP_START + i * headway + headway / 2)
         ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
                      color="#1d4e89", lw=lw_e, ls=(0, (6, 4)), zorder=3)
         if annotate_all:
@@ -166,7 +169,7 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
 
     if not annotate_all:
         # KA referensi (Tabang dep 06:00) + anotasi waktu tiap stasiun
-        ref = path_loaded(6 * 60)
+        ref = path_loaded(OP_START)
         for (t, km), (name, _, typ) in zip(ref, STATIONS):
             lab = "ber." if km == 165 else ("tiba" if km == 0 else "lewat")
             ax_main.plot(t, km, "o", ms=6, color="#c1121f", mec="white", mew=1.0, zorder=6)
@@ -175,12 +178,10 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
                              color="#7a0a13", zorder=7,
                              bbox=dict(boxstyle="round,pad=0.18", fc="#fff3f3", ec="#c1121f", lw=0.6))
 
-    # window operasi (freq*headway) shading sisa = maintenance
-    op_end = freq * headway
-    if op_end < T_END:
-        ax_main.axvspan(op_end, T_END, color="#f1f1f1", zorder=0)
-        ax_main.text((op_end + T_END) / 2, 82, "jendela\nperawatan",
-                     ha="center", va="center", fontsize=12, color="#999", style="italic")
+    # window perawatan (stop operasi total) = 00:00 - 06:00
+    ax_main.axvspan(T_START, OP_START, color="#ececec", zorder=0)
+    ax_main.text(OP_START / 2, 82, "window time\nperawatan\n(00:00–06:00)\nstop operasi",
+                 ha="center", va="center", fontsize=12, color="#888", style="italic")
 
     leg = [mpatches.Patch(color="#c1121f", label="KA Bermuatan (Tabang → Marang Kayu)"),
            mpatches.Patch(color="#1d4e89", label="KA Kosong (Marang Kayu → Tabang)")]
