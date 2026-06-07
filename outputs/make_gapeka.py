@@ -184,8 +184,10 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
 
     leg = [mpatches.Patch(color="#c1121f", label="KA Bermuatan (Tabang → Marang Kayu)"),
            mpatches.Patch(color="#1d4e89", label="KA Kosong (Marang Kayu → Tabang)")]
-    ax_main.legend(handles=leg, loc="upper right", fontsize=12, framealpha=0.97,
-                   borderaxespad=0.4)
+    # legenda diletakkan di ATAS grafik (di luar area data) agar tidak menimpa garis
+    ax_main.legend(handles=leg, loc="lower right", bbox_to_anchor=(1.0, 1.005),
+                   ncol=2, fontsize=12, framealpha=1.0, borderaxespad=0.0,
+                   columnspacing=1.6, handlelength=1.6)
 
     fig.suptitle(
         f"GRAFIK PERJALANAN KERETA API (GAPEKA)  —  Lintas Tabang – Marang Kayu (165 km, Jalur Ganda)\n"
