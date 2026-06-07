@@ -31,10 +31,10 @@ YMIN, YMAX = 0, 165
 
 # Petak jalan (arah bermuatan hulu->hilir): km_atas, km_bawah, jarak, Vmax, Vops, gradien_permil
 SEGMENTS = [
-    (165, 132, 33, 60, 55, 6.0),
-    (132,  99, 33, 60, 55, 4.0),
-    ( 99,  66, 33, 60, 55, 5.0),
-    ( 66,   0, 66, 60, 55, 3.0),
+    (165, 132, 33, 66, 60, 6.0),
+    (132,  99, 33, 66, 60, 4.0),
+    ( 99,  66, 33, 66, 60, 5.0),
+    ( 66,   0, 66, 66, 60, 3.0),
 ]
 VOPS = 55.0
 def seg_minutes(d): return d / VOPS * 60.0
@@ -89,16 +89,16 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     # Kolom 1: nama
     ax_name.set_xlim(0, 1); station_lines(ax_name)
     for name, km, typ in STATIONS:
-        ax_name.text(0.97, km, name, ha="right", va="center", fontsize=14,
+        ax_name.text(0.97, km, name, ha="right", va="center", fontsize=21,
                      fontweight=("bold" if typ == "terminal" else "normal"),
                      color=("#062c5c" if typ == "terminal" else "#333"))
-    ax_name.set_title("STASIUN", fontsize=13, fontweight="bold", pad=8)
+    ax_name.set_title("STASIUN", fontsize=19, fontweight="bold", pad=8)
 
     # Kolom 2: KM
     ax_km.set_xlim(0, 1); station_lines(ax_km)
     for name, km, typ in STATIONS:
-        ax_km.text(0.5, km, f"KM {km:g}", ha="center", va="center", fontsize=13, color="#444")
-    ax_km.set_title("POSISI", fontsize=13, fontweight="bold", pad=8)
+        ax_km.text(0.5, km, f"KM {km:g}", ha="center", va="center", fontsize=19, color="#444")
+    ax_km.set_title("POSISI", fontsize=19, fontweight="bold", pad=8)
 
     for ax in (ax_name, ax_km):
         ax.set_xticks([]); ax.set_yticks([])
@@ -110,9 +110,9 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
             ax.barh((kt + kb) / 2, val, height=abs(kt - kb) - 1.2,
                     color=fill, edgecolor=color, lw=1.2, zorder=2)
             ax.text(val * 0.5, (kt + kb) / 2, fmt.format(val), ha="center", va="center",
-                    fontsize=14, fontweight="bold", color=color, zorder=3)
-        ax.set_title(title, fontsize=13, fontweight="bold", pad=8)
-        ax.set_xlabel(unit, fontsize=10)
+                    fontsize=21, fontweight="bold", color=color, zorder=3)
+        ax.set_title(title, fontsize=19, fontweight="bold", pad=8)
+        ax.set_xlabel(unit, fontsize=15)
         ax.set_xticks([]); ax.set_yticks([])
         for sp in ax.spines.values(): sp.set_color("#ccc")
 
@@ -121,25 +121,25 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     profile(ax_grad, [s[5] for s in SEGMENTS], 8, "#7a4b00", "#f3dfb0", "permil (‰)",
             "GRADIEN", fmt="{:.0f}‰")
     ax_grad.text(0.5, -10, "turun arah hilir\n(maks 0,6%)", ha="center", va="top",
-                 fontsize=9.5, style="italic", color="#7a4b00")
+                 fontsize=14, style="italic", color="#7a4b00")
 
     # PANEL UTAMA
     station_lines(ax_main)
     ax_main.set_xlim(T_START, T_END)
     xt = list(range(0, T_END + 1, 60))
     ax_main.set_xticks(xt)
-    ax_main.set_xticklabels([hhmm(t) for t in xt], fontsize=11, rotation=0)
+    ax_main.set_xticklabels([hhmm(t) for t in xt], fontsize=16, rotation=0)
     ax_main.xaxis.set_minor_locator(MultipleLocator(30))
     ax_main.grid(which="major", axis="x", color="#cfe0f0", lw=0.8, zorder=0)
     ax_main.grid(which="minor", axis="x", color="#eef3f8", lw=0.5, zorder=0)
     ax_main.set_xlabel("WAKTU (kedatangan / keberangkatan tiap stasiun) — 00:00 s.d. 24:00",
-                       fontsize=13, fontweight="bold")
+                       fontsize=19, fontweight="bold")
     ax_main.set_title(f"GRAFIK PERJALANAN KERETA API — {freq} trip/hari, headway {headway} menit",
                       fontsize=13, fontweight="bold", pad=8, loc="left")
     ax_main.tick_params(axis="y", left=False, labelleft=False)
 
     lw_l, lw_e = (1.2, 1.0) if annotate_all else (1.7, 1.3)
-    lab_fs = 7.5 if annotate_all else 7.6
+    lab_fs = 11.0 if annotate_all else 7.6
     DAY = 24 * 60  # batas 24:00; perjalanan yang melewatinya dibungkus (wrap) ke 00:00
 
     def draw_path(pts, color, lw, ls, lab_color=None, dy=0, zorder=4):
