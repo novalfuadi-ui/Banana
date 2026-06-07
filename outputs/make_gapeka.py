@@ -89,16 +89,16 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     # Kolom 1: nama
     ax_name.set_xlim(0, 1); station_lines(ax_name)
     for name, km, typ in STATIONS:
-        ax_name.text(0.97, km, name, ha="right", va="center", fontsize=14,
+        ax_name.text(0.97, km, name, ha="right", va="center", fontsize=21,
                      fontweight=("bold" if typ == "terminal" else "normal"),
                      color=("#062c5c" if typ == "terminal" else "#333"))
-    ax_name.set_title("STASIUN", fontsize=13, fontweight="bold", pad=8)
+    ax_name.set_title("STASIUN", fontsize=19, fontweight="bold", pad=8)
 
     # Kolom 2: KM
     ax_km.set_xlim(0, 1); station_lines(ax_km)
     for name, km, typ in STATIONS:
-        ax_km.text(0.5, km, f"KM {km:g}", ha="center", va="center", fontsize=13, color="#444")
-    ax_km.set_title("POSISI", fontsize=13, fontweight="bold", pad=8)
+        ax_km.text(0.5, km, f"KM {km:g}", ha="center", va="center", fontsize=19, color="#444")
+    ax_km.set_title("POSISI", fontsize=19, fontweight="bold", pad=8)
 
     for ax in (ax_name, ax_km):
         ax.set_xticks([]); ax.set_yticks([])
@@ -110,9 +110,9 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
             ax.barh((kt + kb) / 2, val, height=abs(kt - kb) - 1.2,
                     color=fill, edgecolor=color, lw=1.2, zorder=2)
             ax.text(val * 0.5, (kt + kb) / 2, fmt.format(val), ha="center", va="center",
-                    fontsize=14, fontweight="bold", color=color, zorder=3)
-        ax.set_title(title, fontsize=13, fontweight="bold", pad=8)
-        ax.set_xlabel(unit, fontsize=10)
+                    fontsize=21, fontweight="bold", color=color, zorder=3)
+        ax.set_title(title, fontsize=19, fontweight="bold", pad=8)
+        ax.set_xlabel(unit, fontsize=15)
         ax.set_xticks([]); ax.set_yticks([])
         for sp in ax.spines.values(): sp.set_color("#ccc")
 
@@ -121,29 +121,29 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     profile(ax_grad, [s[5] for s in SEGMENTS], 8, "#7a4b00", "#f3dfb0", "permil (‰)",
             "GRADIEN", fmt="{:.0f}‰")
     ax_grad.text(0.5, -10, "turun arah hilir\n(maks 0,6%)", ha="center", va="top",
-                 fontsize=9.5, style="italic", color="#7a4b00")
+                 fontsize=14, style="italic", color="#7a4b00")
 
     # PANEL UTAMA
     station_lines(ax_main)
     ax_main.set_xlim(T_START, T_END)
     xt = list(range(0, T_END + 1, 60))
     ax_main.set_xticks(xt)
-    ax_main.set_xticklabels([hhmm(t) for t in xt], fontsize=11, rotation=0)
+    ax_main.set_xticklabels([hhmm(t) for t in xt], fontsize=16, rotation=0)
     ax_main.xaxis.set_minor_locator(MultipleLocator(30))
     ax_main.grid(which="major", axis="x", color="#cfe0f0", lw=0.8, zorder=0)
     ax_main.grid(which="minor", axis="x", color="#eef3f8", lw=0.5, zorder=0)
     ax_main.set_xlabel("WAKTU (kedatangan / keberangkatan tiap stasiun) — 00:00 s.d. 24:00",
-                       fontsize=13, fontweight="bold")
+                       fontsize=19, fontweight="bold")
     ax_main.set_title(f"GRAFIK PERJALANAN KERETA API — {freq} trip/hari, headway {headway} menit",
-                      fontsize=13, fontweight="bold", pad=8)
+                      fontsize=19, fontweight="bold", pad=8)
     ax_main.tick_params(axis="y", left=False, labelleft=False)
 
     lw_l, lw_e = (1.2, 1.0) if annotate_all else (1.7, 1.3)
-    lab_fs = 7.5 if annotate_all else 7.6
+    lab_fs = 11.0 if annotate_all else 7.6
 
     def node_labels(pts, color, dy):
         for (t, km) in pts:
-            ax_main.plot(t, km, "o", ms=3.2, color=color, mec="white", mew=0.5, zorder=6)
+            ax_main.plot(t, km, "o", ms=4.2, color=color, mec="white", mew=0.6, zorder=6)
             ax_main.annotate(hhmm(t), (t, km), textcoords="offset points",
                              xytext=(0, dy), ha="center",
                              fontsize=lab_fs, color=color, zorder=7, fontweight="bold",
@@ -155,14 +155,14 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
         ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
                      color="#c1121f", lw=lw_l, solid_capstyle="round", zorder=4)
         if annotate_all:
-            node_labels(pts, "#9c1006", dy=6)
+            node_labels(pts, "#9c1006", dy=9)
     # KA kosong (MK -> Tabang)
     for i in range(freq):
         pts = path_empty(i * headway + headway / 2)
         ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
                      color="#1d4e89", lw=lw_e, ls=(0, (6, 4)), zorder=3)
         if annotate_all:
-            node_labels(pts, "#123a66", dy=-13)
+            node_labels(pts, "#123a66", dy=-19)
 
     if not annotate_all:
         # KA referensi (Tabang dep 06:00) + anotasi waktu tiap stasiun
@@ -180,20 +180,20 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     if op_end < T_END:
         ax_main.axvspan(op_end, T_END, color="#f1f1f1", zorder=0)
         ax_main.text((op_end + T_END) / 2, 82, "jendela\nperawatan",
-                     ha="center", va="center", fontsize=12, color="#999", style="italic")
+                     ha="center", va="center", fontsize=18, color="#999", style="italic")
 
     leg = [mpatches.Patch(color="#c1121f", label="KA Bermuatan (Tabang → Marang Kayu)"),
            mpatches.Patch(color="#1d4e89", label="KA Kosong (Marang Kayu → Tabang)")]
-    ax_main.legend(handles=leg, loc="upper right", fontsize=12, framealpha=0.95)
+    ax_main.legend(handles=leg, loc="upper right", fontsize=17, framealpha=0.95)
 
     fig.suptitle(
         f"GRAFIK PERJALANAN KERETA API (GAPEKA)  —  Lintas Tabang – Marang Kayu (165 km, Jalur Ganda)\n"
         f"KA Khusus Logistik Batubara PT Bayan Resources Tbk  •  Skenario {label} "
         f"(headway {headway} menit, {freq} trip/hari, waktu tempuh 180 menit/arah)",
-        fontsize=18, fontweight="bold", y=0.975)
+        fontsize=26, fontweight="bold", y=0.975)
     fig.text(0.004, 0.012,
              "Sumber: Bab VI Analisis Operasi KA (Draft Akhir 01-06-2026), Tabel 6.3-1, 6.5, 6.7, 6.10, 6.11; profil gradien per-petak indikatif (maks 0,6%).",
-             fontsize=9.5, style="italic", color="#666")
+             fontsize=13, style="italic", color="#666")
 
     fig.savefig(f"outputs/{fname}", dpi=150, facecolor="white", bbox_inches="tight")
     plt.close(fig)
