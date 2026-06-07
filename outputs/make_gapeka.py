@@ -200,6 +200,5 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     print("Saved: outputs/" + fname)
 
 
-build(SCENARIOS["70"])
 # 80 MTPA: anotasi waktu di tiap stasiun untuk setiap perjalanan + resolusi tinggi
 build(SCENARIOS["80"], annotate_all=True, dpi=300, figsize=(40, 16))
