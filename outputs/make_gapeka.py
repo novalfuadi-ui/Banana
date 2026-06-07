@@ -202,6 +202,8 @@ def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     Lb = [max(loaded_left(k), empty_left(k)) for k in kms]
     Rb = [min(loaded_right(k), empty_right(k)) for k in kms]
     ax_main.fill_betweenx(kms, Lb, Rb, color="#e6e6e6", lw=0, zorder=0)
+    # arsiran jendela perawatan 00:00-06:00 (window time per dokumen)
+    ax_main.axvspan(T_START, OP_START, color="#e6e6e6", lw=0, zorder=0)
     # label di tengah area perawatan
     cx = (max(loaded_left(82), empty_left(82)) + min(loaded_right(82), empty_right(82))) / 2
     ax_main.text(cx, 82, "jendela perawatan\n(window time)\n00:00–06:00",
