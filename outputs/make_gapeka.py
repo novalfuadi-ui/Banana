@@ -63,10 +63,10 @@ def path_empty(dep):
 def hhmm(m): return f"{int(m)//60:02d}:{int(m)%60:02d}"
 
 
-def build(scn):
+def build(scn, annotate_all=False, dpi=150, figsize=(22, 11.5)):
     headway, freq, label, fname = scn["headway"], scn["freq"], scn["label"], scn["file"]
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9})
-    fig = plt.figure(figsize=(22, 11.5), dpi=150)
+    fig = plt.figure(figsize=figsize, dpi=dpi)
     gs = GridSpec(1, 5, figure=fig,
                   width_ratios=[2.4, 0.7, 0.95, 0.95, 1.05],
                   wspace=0.06, left=0.004, right=0.30, top=0.90, bottom=0.07)
@@ -138,28 +138,42 @@ def build(scn):
                       fontsize=10, fontweight="bold", pad=8)
     ax_main.tick_params(axis="y", left=False, labelleft=False)
 
+    lw_l, lw_e = (1.2, 1.0) if annotate_all else (1.7, 1.3)
+    lab_fs = 5.0 if annotate_all else 7.6
+
+    def node_labels(pts, color, dy):
+        for (t, km) in pts:
+            ax_main.plot(t, km, "o", ms=2.2, color=color, mec="white", mew=0.4, zorder=6)
+            ax_main.annotate(hhmm(t), (t, km), textcoords="offset points",
+                             xytext=(0, dy), ha="center",
+                             fontsize=lab_fs, color=color, zorder=7,
+                             rotation=0, clip_on=True)
+
     # KA bermuatan (Tabang -> MK), berangkat tiap headway sejumlah frekuensi
     for i in range(freq):
-        dep = i * headway
-        pts = path_loaded(dep)
+        pts = path_loaded(i * headway)
         ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
-                     color="#c1121f", lw=1.7, solid_capstyle="round", zorder=4)
+                     color="#c1121f", lw=lw_l, solid_capstyle="round", zorder=4)
+        if annotate_all:
+            node_labels(pts, "#9c1006", dy=4)
     # KA kosong (MK -> Tabang)
     for i in range(freq):
-        dep = i * headway + headway / 2
-        pts = path_empty(dep)
+        pts = path_empty(i * headway + headway / 2)
         ax_main.plot([p[0] for p in pts], [p[1] for p in pts],
-                     color="#1d4e89", lw=1.3, ls=(0, (6, 4)), zorder=3)
+                     color="#1d4e89", lw=lw_e, ls=(0, (6, 4)), zorder=3)
+        if annotate_all:
+            node_labels(pts, "#123a66", dy=-9)
 
-    # KA referensi (Tabang dep 06:00) + anotasi waktu tiap stasiun
-    ref = path_loaded(6 * 60)
-    for (t, km), (name, _, typ) in zip(ref, STATIONS):
-        lab = "ber." if km == 165 else ("tiba" if km == 0 else "lewat")
-        ax_main.plot(t, km, "o", ms=6, color="#c1121f", mec="white", mew=1.0, zorder=6)
-        ax_main.annotate(f"{hhmm(t)}\n({lab})", (t, km), textcoords="offset points",
-                         xytext=(7, 9 if km != 0 else -24), fontsize=7.6, fontweight="bold",
-                         color="#7a0a13", zorder=7,
-                         bbox=dict(boxstyle="round,pad=0.18", fc="#fff3f3", ec="#c1121f", lw=0.6))
+    if not annotate_all:
+        # KA referensi (Tabang dep 06:00) + anotasi waktu tiap stasiun
+        ref = path_loaded(6 * 60)
+        for (t, km), (name, _, typ) in zip(ref, STATIONS):
+            lab = "ber." if km == 165 else ("tiba" if km == 0 else "lewat")
+            ax_main.plot(t, km, "o", ms=6, color="#c1121f", mec="white", mew=1.0, zorder=6)
+            ax_main.annotate(f"{hhmm(t)}\n({lab})", (t, km), textcoords="offset points",
+                             xytext=(7, 9 if km != 0 else -24), fontsize=7.6, fontweight="bold",
+                             color="#7a0a13", zorder=7,
+                             bbox=dict(boxstyle="round,pad=0.18", fc="#fff3f3", ec="#c1121f", lw=0.6))
 
     # window operasi (freq*headway) shading sisa = maintenance
     op_end = freq * headway
@@ -186,5 +200,6 @@ def build(scn):
     print("Saved: outputs/" + fname)
 
 
-for key in ("70", "80"):
-    build(SCENARIOS[key])
+build(SCENARIOS["70"])
+# 80 MTPA: anotasi waktu di tiap stasiun untuk setiap perjalanan + resolusi tinggi
+build(SCENARIOS["80"], annotate_all=True, dpi=300, figsize=(40, 16))
